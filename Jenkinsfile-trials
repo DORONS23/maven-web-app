@@ -1,0 +1,27 @@
+  node {
+    def mavenTool = tool name: 'Maven-Server'
+    stage('git checkout')
+        {
+          git credentialsId: 'Git-git', url: 'https://github.com/DORONS23/maven-web-app/tree/master'
+        }
+    stage('build artifact')
+        {
+         sh "${mavenTool}/bin/mvn package"
+        }
+    stage('code quality analysis')
+        {
+         sh "${mavenTool}/bin/mvn sonar:sonar"
+        }
+    stage('upload to Nexus')
+        {
+          sh "${mavenTool}/bin/mvn deploy"
+        }
+    stage('deploy to Tomcat')
+        {
+          deploy adapters: [tomcat9(credentialsId: 'Tomcatcred', path: '', url: 'http://18.206.38.207:8080/')], contextPath: 'myownapp', war: 'target/*.war'
+        }
+    stage('send email notification')
+        {
+          mail bcc: '', body: 'Your build was successful', cc: 'edorons@gmail.com', from: '', replyTo: '', subject: 'Build Progression', to: 'edorons@yahoo.com'
+        }
+  }
